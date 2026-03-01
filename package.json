@@ -1,0 +1,38 @@
+{
+    "name": "chrome-scripting-api",
+    "version": "0.1.0",
+    "description": "Chrome Scripting API wrapper for MV3 — inject scripts, CSS, execute functions, register content scripts dynamically. Zero dependencies.",
+    "author": "Zovo <hello@zovo.one>",
+    "license": "MIT",
+    "keywords": [
+        "chrome-extension",
+        "scripting",
+        "chrome-scripting",
+        "inject",
+        "content-script",
+        "executeScript",
+        "manifest-v3",
+        "browser-extension",
+        "css-injection"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/theluckystrike/chrome-scripting-api.git"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "prepublishOnly": "npm run build"
+    },
+    "devDependencies": {
+        "@types/chrome": "^0.0.260",
+        "typescript": "^5.3.3"
+    }
+}

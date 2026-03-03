@@ -1,18 +1,21 @@
-# chrome-scripting-api — Scripting API Wrapper for MV3
+# chrome-scripting-api
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+Script injection API wrapper for Chrome extensions.
 
-> **Built by [Zovo](https://zovo.one)**
+## Installation
 
-**Chrome Scripting API wrapper** — inject JS/CSS, execute functions in tabs, dynamic content script registration, dark mode injection, element hiding.
-
-## 🚀 Quick Start
-```typescript
-import { ScriptInjector, CSSInjector, ContentScriptRegistry } from 'chrome-scripting-api';
-const title = await ScriptInjector.getPageTitle(tabId);
-await CSSInjector.darkMode(tabId);
-await ContentScriptRegistry.register('my-script', ['*://*.example.com/*'], ['content.js']);
+```bash
+npm install chrome-scripting-api
 ```
 
-## 📄 License
-MIT — [Zovo](https://zovo.one)
+## Usage
+
+```javascript
+import { Scripting } from 'chrome-scripting-api';
+
+await Scripting.executeScript(tabId, 'alert("hello")');
+```
+
+## License
+
+MIT

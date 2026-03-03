@@ -1,3 +1,3 @@
-export { ScriptInjector } from './injector';
-export { CSSInjector } from './css';
-export { ContentScriptRegistry } from './registry';
+export { ScriptInjector, ScriptInjectorError, ScriptInjectorErrorCode } from './injector';
+export { CSSInjector, CSSInjectorError, CSSInjectorErrorCode } from './css';
+export { ScriptRegistry } from './registry';

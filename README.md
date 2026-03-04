@@ -1,170 +1,139 @@
 # chrome-scripting-api
 
-[![npm version](https://img.shields.io/npm/v/chrome-scripting-api)](https://npmjs.com/package/chrome-scripting-api)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Chrome Web Extension](https://img.shields.io/badge/Chrome-Web%20Extension-orange.svg)](https://developer.chrome.com/docs/extensions/)
-[![CI Status](https://github.com/theluckystrike/chrome-scripting-api/actions/workflows/ci.yml/badge.svg)](https://github.com/theluckystrike/chrome-scripting-api/actions)
-[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
-[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
-[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-scripting-api?style=social)](https://github.com/theluckystrike/chrome-scripting-api)
+> Chrome Scripting API wrapper for MV3 -- inject scripts, CSS, execute functions, and register content scripts dynamically. Zero dependencies.
 
-> Script injection API wrapper for Chrome extensions — execute scripts, insert CSS, and manage content scripts with type safety.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**chrome-scripting-api** provides a clean TypeScript wrapper around Chrome's scripting API for executing scripts, inserting CSS, and managing content scripts in extensions.
-
-Part of the [Zovo](https://zovo.one) developer tools family.
-
-## Features
-
-- ✅ **Script Execution** - Execute JavaScript in pages
-- ✅ **CSS Injection** - Insert stylesheets into pages
-- ✅ **Content Script Management** - Register and manage content scripts
-- ✅ **TypeScript Support** - Full type definitions included
-- ✅ **MV3 Compatible** - Works with Manifest V3 extensions
-
-## Installation
+## Install
 
 ```bash
 npm install chrome-scripting-api
 ```
 
-## Quick Start
+## Usage
 
-```typescript
-import { Scripting } from 'chrome-scripting-api';
+```js
+import { ScriptInjector, CSSInjector, ContentScriptRegistry } from 'chrome-scripting-api';
 
-// Execute a script
-await Scripting.executeScript(tabId, 'alert("hello")');
+// Execute a function in a specific tab
+const title = await ScriptInjector.executeFunction(tabId, () => document.title);
 
-// Execute with function
-await Scripting.executeScript(tabId, () => {
-  document.body.style.backgroundColor = 'red';
-});
-```
+// Execute in the currently active tab
+const text = await ScriptInjector.executeInActiveTab(() => document.body.innerText);
 
-## Usage Examples
+// Execute a script file in a tab
+await ScriptInjector.executeFile(tabId, 'scripts/content.js');
 
-### Execute JavaScript
+// Execute across all frames in a tab
+const results = await ScriptInjector.executeInAllFrames(tabId, () => document.title);
 
-```typescript
-import { Scripting } from 'chrome-scripting-api';
+// Execute in multiple tabs at once
+const resultMap = await ScriptInjector.executeInTabs([1, 2, 3], () => location.href);
 
-// Execute a script string
-await Scripting.executeScript(tabId, 'alert("hello")');
+// Inject inline CSS
+await CSSInjector.inject(tabId, 'body { background: #1a1a1a; color: #eee; }');
 
-// Execute with function
-await Scripting.executeScript(tabId, () => {
-  document.body.style.backgroundColor = 'red';
-});
+// Inject a CSS file
+await CSSInjector.injectFile(tabId, 'styles/custom.css');
 
-// Execute with parameters
-await Scripting.executeScript(tabId, (params: { color: string }) => {
-  document.body.style.backgroundColor = params.color;
-}, { color: 'blue' });
-```
+// Apply dark mode to any page
+await CSSInjector.darkMode(tabId);
 
-### Insert CSS
+// Hide elements by selector
+await CSSInjector.hide(tabId, '.ads, .banner, .popup');
 
-```typescript
-import { Scripting } from 'chrome-scripting-api';
+// Remove previously injected CSS
+await CSSInjector.remove(tabId, 'body { background: #1a1a1a; color: #eee; }');
 
-// Insert CSS
-await Scripting.insertCSS(tabId, 'body { font-size: 18px; }');
+// Dynamically register a content script
+await ContentScriptRegistry.register('my-script', ['https://*.example.com/*'], ['content.js']);
 
-// Insert from file
-await Scripting.insertCSS(tabId, { file: 'styles.css' });
-```
-
-### Remove CSS
-
-```typescript
-import { Scripting } from 'chrome-scripting-api';
-
-// Remove inserted CSS
-await Scripting.removeCSS(tabId, 'body { font-size: 18px; }');
+// Toggle a content script on/off
+const isEnabled = await ContentScriptRegistry.toggle('my-script', ['*://*/*'], ['inject.js']);
 ```
 
 ## API
 
-### Methods
+### `ScriptInjector`
 
-| Method | Description |
-|--------|-------------|
-| `executeScript(tabId, script)` | Execute JavaScript in a tab |
-| `insertCSS(tabId, css)` | Insert CSS into a tab |
-| `removeCSS(tabId, css)` | Remove inserted CSS |
+All methods are static and async.
 
-### Options
+| Method | Parameters | Return Type | Description |
+|--------|-----------|-------------|-------------|
+| `executeFunction` | `tabId: number, fn: (...args) => T, args?: unknown[]` | `Promise<T \| undefined>` | Execute a function in a tab |
+| `executeInAllFrames` | `tabId: number, fn: (...args) => T` | `Promise<T[]>` | Execute a function in all frames of a tab |
+| `executeFile` | `tabId: number, file: string` | `Promise<void>` | Execute a script file in a tab |
+| `executeInTabs` | `tabIds: number[], fn: (...args) => T` | `Promise<Map<number, T \| { error: string }>>` | Execute a function in multiple tabs |
+| `executeInActiveTab` | `fn: (...args) => T` | `Promise<T \| undefined>` | Execute a function in the currently active tab |
+| `getPageTitle` | `tabId: number` | `Promise<string>` | Get the page title from a tab |
+| `getPageText` | `tabId: number` | `Promise<string>` | Get the body text content from a tab |
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `tabId` | number | Target tab ID |
-| `script` | string \| function | Script to execute |
-| `css` | string | CSS to insert |
+### `CSSInjector`
 
-## Manifest
+All methods are static and async.
 
-```json
-{
-  "permissions": ["scripting", "tabs"]
-}
-```
+| Method | Parameters | Return Type | Description |
+|--------|-----------|-------------|-------------|
+| `inject` | `tabId: number, css: string` | `Promise<void>` | Inject an inline CSS string into a tab |
+| `injectFile` | `tabId: number, file: string` | `Promise<void>` | Inject a CSS file into a tab |
+| `remove` | `tabId: number, css: string` | `Promise<void>` | Remove previously injected CSS |
+| `injectAllFrames` | `tabId: number, css: string` | `Promise<void>` | Inject CSS into all frames of a tab |
+| `darkMode` | `tabId: number` | `Promise<void>` | Apply a dark mode filter to a tab |
+| `hide` | `tabId: number, selector: string` | `Promise<void>` | Hide elements matching a CSS selector |
 
-## Browser Support
+### `ContentScriptRegistry`
 
-- Chrome 88+ (MV3)
-- Manifest V3
+All methods are static and async.
 
-## Contributing
+| Method | Parameters | Return Type | Description |
+|--------|-----------|-------------|-------------|
+| `register` | `id: string, matches: string[], js?: string[], css?: string[], runAt?: 'document_start' \| 'document_end' \| 'document_idle'` | `Promise<void>` | Register a content script dynamically |
+| `unregister` | `ids: string[]` | `Promise<void>` | Unregister content scripts by ID |
+| `getAll` | none | `Promise<RegisteredContentScript[]>` | Get all registered content scripts |
+| `update` | `id: string, changes: { matches?, js?, css? }` | `Promise<void>` | Update a registered content script |
+| `toggle` | `id: string, matches: string[], js: string[]` | `Promise<boolean>` | Toggle a script on/off; returns `true` if registered, `false` if unregistered |
 
-Contributions are welcome! Please follow these steps:
+### `ScriptInjectorError`
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/scripting-feature`
-3. **Make** your changes
-4. **Test** your changes: `npm test`
-5. **Commit** your changes: `git commit -m 'Add new feature'`
-6. **Push** to the branch: `git push origin feature/scripting-feature`
-7. **Submit** a Pull Request
+Custom error class thrown by `ScriptInjector` methods.
 
-### Development Setup
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Human-readable error message |
+| `code` | `string` | Error code from `ScriptInjectorErrorCode` |
+| `operation` | `string` | The method that threw the error |
+| `originalError` | `Error \| undefined` | The underlying Chrome API error |
 
-```bash
-# Clone the repository
-git clone https://github.com/theluckystrike/chrome-scripting-api.git
-cd chrome-scripting-api
+### `ScriptInjectorErrorCode`
 
-# Install dependencies
-npm install
+| Code | Description |
+|------|-------------|
+| `SCRIPTING_API_ERROR` | General Chrome Scripting API error |
+| `INVALID_TAB_ID` | Invalid or nonexistent tab ID |
+| `TABS_API_ERROR` | Error querying the Tabs API |
+| `NO_ACTIVE_TAB` | No active tab found in the current window |
+| `SCRIPT_EXECUTION_FAILED` | Script execution failed (invalid function or file) |
 
-# Build
-npm run build
-```
+### `CSSInjectorError`
 
-## Built by Zovo
+Custom error class thrown by `CSSInjector` methods.
 
-Part of the [Zovo](https://zovo.one) developer tools family — privacy-first Chrome extensions built by developers, for developers.
+| Property | Type | Description |
+|----------|------|-------------|
+| `message` | `string` | Human-readable error message |
+| `code` | `string` | Error code from `CSSInjectorErrorCode` |
+| `operation` | `string` | The method that threw the error |
+| `originalError` | `Error \| undefined` | The underlying Chrome API error |
 
-## See Also
+### `CSSInjectorErrorCode`
 
-### Related Zovo Repositories
-
-- [chrome-storage-plus](https://github.com/theluckystrike/chrome-storage-plus) - Type-safe storage wrapper
-- [chrome-extension-starter-mv3](https://github.com/theluckystrike/chrome-extension-starter-mv3) - Extension template
-
-### Zovo Chrome Extensions
-
-- [Zovo Tab Manager](https://chrome.google.com/webstore/detail/zovo-tab-manager) - Manage tabs efficiently
-- [Zovo Focus](https://chrome.google.com/webstore/detail/zovo-focus) - Block distractions
-- [Zovo Permissions Scanner](https://chrome.google.com/webstore/detail/zovo-permissions-scanner) - Check extension privacy grades
-
-Visit [zovo.one](https://zovo.one) for more information.
+| Code | Description |
+|------|-------------|
+| `SCRIPTING_API_ERROR` | General Chrome Scripting API error |
+| `INVALID_TAB_ID` | Invalid or nonexistent tab ID |
+| `INVALID_CSS` | Invalid CSS string provided |
+| `INVALID_FILE` | Invalid file path provided |
 
 ## License
 
-MIT — [Zovo](https://zovo.one)
-
----
-
-*Built by developers, for developers. No compromises on privacy.*
+MIT

@@ -1,8 +1,15 @@
 # chrome-scripting-api
 
+[![npm version](https://img.shields.io/npm/v/chrome-scripting-api)](https://npmjs.com/package/chrome-scripting-api)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
+[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
+[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-scripting-api?style=social)](https://github.com/theluckystrike/chrome-scripting-api)
+
 > Chrome Scripting API wrapper for MV3 -- inject scripts, CSS, execute functions, and register content scripts dynamically. Zero dependencies.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+Part of the [Zovo](https://zovo.one) developer tools family.
 
 ## Install
 
@@ -137,3 +144,23 @@ Custom error class thrown by `CSSInjector` methods.
 ## License
 
 MIT
+
+## See Also
+
+- [chrome-extension-starter-mv3](https://github.com/theluckystrike/chrome-extension-starter-mv3) - Production-ready MV3 template
+- [chrome-storage-plus](https://github.com/theluckystrike/chrome-storage-plus) - Type-safe storage wrapper
+- [content-script-toolkit](https://github.com/theluckystrike/content-script-toolkit) - Shadow DOM and content script utilities
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+Built by [Zovo](https://zovo.one)

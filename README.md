@@ -3,164 +3,204 @@
 [![npm version](https://img.shields.io/npm/v/chrome-scripting-api)](https://npmjs.com/package/chrome-scripting-api)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Discord](https://img.shields.io/badge/Discord-Zovo-blueviolet.svg?logo=discord)](https://discord.gg/zovo)
-[![Website](https://img.shields.io/badge/Website-zovo.one-blue)](https://zovo.one)
-[![GitHub Stars](https://img.shields.io/github/stars/theluckystrike/chrome-scripting-api?style=social)](https://github.com/theluckystrike/chrome-scripting-api)
 
-> Chrome Scripting API wrapper for MV3 -- inject scripts, CSS, execute functions, and register content scripts dynamically. Zero dependencies.
+Chrome Scripting API wrapper for Manifest V3. Inject scripts, CSS, execute functions, and register content scripts dynamically. Zero dependencies. Written in TypeScript with full type safety.
 
-Part of the [Zovo](https://zovo.one) developer tools family.
-
-## Install
+INSTALL
 
 ```bash
 npm install chrome-scripting-api
 ```
 
-## Usage
+Your manifest.json needs the scripting permission and host_permissions for the tabs you want to target.
+
+```json
+{
+  "permissions": ["scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"]
+}
+```
+
+USAGE
 
 ```js
 import { ScriptInjector, CSSInjector, ContentScriptRegistry } from 'chrome-scripting-api';
-
-// Execute a function in a specific tab
-const title = await ScriptInjector.executeFunction(tabId, () => document.title);
-
-// Execute in the currently active tab
-const text = await ScriptInjector.executeInActiveTab(() => document.body.innerText);
-
-// Execute a script file in a tab
-await ScriptInjector.executeFile(tabId, 'scripts/content.js');
-
-// Execute across all frames in a tab
-const results = await ScriptInjector.executeInAllFrames(tabId, () => document.title);
-
-// Execute in multiple tabs at once
-const resultMap = await ScriptInjector.executeInTabs([1, 2, 3], () => location.href);
-
-// Inject inline CSS
-await CSSInjector.inject(tabId, 'body { background: #1a1a1a; color: #eee; }');
-
-// Inject a CSS file
-await CSSInjector.injectFile(tabId, 'styles/custom.css');
-
-// Apply dark mode to any page
-await CSSInjector.darkMode(tabId);
-
-// Hide elements by selector
-await CSSInjector.hide(tabId, '.ads, .banner, .popup');
-
-// Remove previously injected CSS
-await CSSInjector.remove(tabId, 'body { background: #1a1a1a; color: #eee; }');
-
-// Dynamically register a content script
-await ContentScriptRegistry.register('my-script', ['https://*.example.com/*'], ['content.js']);
-
-// Toggle a content script on/off
-const isEnabled = await ContentScriptRegistry.toggle('my-script', ['*://*/*'], ['inject.js']);
 ```
 
-## API
+SCRIPTINJECTOR
 
-### `ScriptInjector`
-
-All methods are static and async.
-
-| Method | Parameters | Return Type | Description |
-|--------|-----------|-------------|-------------|
-| `executeFunction` | `tabId: number, fn: (...args) => T, args?: unknown[]` | `Promise<T \| undefined>` | Execute a function in a tab |
-| `executeInAllFrames` | `tabId: number, fn: (...args) => T` | `Promise<T[]>` | Execute a function in all frames of a tab |
-| `executeFile` | `tabId: number, file: string` | `Promise<void>` | Execute a script file in a tab |
-| `executeInTabs` | `tabIds: number[], fn: (...args) => T` | `Promise<Map<number, T \| { error: string }>>` | Execute a function in multiple tabs |
-| `executeInActiveTab` | `fn: (...args) => T` | `Promise<T \| undefined>` | Execute a function in the currently active tab |
-| `getPageTitle` | `tabId: number` | `Promise<string>` | Get the page title from a tab |
-| `getPageText` | `tabId: number` | `Promise<string>` | Get the body text content from a tab |
-
-### `CSSInjector`
+Execute functions, files, and scripts inside browser tabs.
 
 All methods are static and async.
 
-| Method | Parameters | Return Type | Description |
-|--------|-----------|-------------|-------------|
-| `inject` | `tabId: number, css: string` | `Promise<void>` | Inject an inline CSS string into a tab |
-| `injectFile` | `tabId: number, file: string` | `Promise<void>` | Inject a CSS file into a tab |
-| `remove` | `tabId: number, css: string` | `Promise<void>` | Remove previously injected CSS |
-| `injectAllFrames` | `tabId: number, css: string` | `Promise<void>` | Inject CSS into all frames of a tab |
-| `darkMode` | `tabId: number` | `Promise<void>` | Apply a dark mode filter to a tab |
-| `hide` | `tabId: number, selector: string` | `Promise<void>` | Hide elements matching a CSS selector |
+ScriptInjector.executeFunction(tabId, fn, args?)
+Runs a function inside a tab. Returns the function's return value. Pass serializable arguments via the optional args array.
 
-### `ContentScriptRegistry`
+```js
+const title = await ScriptInjector.executeFunction(tabId, () => document.title);
+
+const text = await ScriptInjector.executeFunction(tabId, (sel) => {
+  return document.querySelector(sel)?.textContent;
+}, ['.main-content']);
+```
+
+ScriptInjector.executeInActiveTab(fn)
+Queries the current active tab automatically and runs the function there. Requires the tabs permission.
+
+```js
+const url = await ScriptInjector.executeInActiveTab(() => location.href);
+```
+
+ScriptInjector.executeFile(tabId, file)
+Injects a bundled script file into the tab.
+
+```js
+await ScriptInjector.executeFile(tabId, 'scripts/content.js');
+```
+
+ScriptInjector.executeInAllFrames(tabId, fn)
+Runs a function in every frame of a tab. Returns an array of results, one per frame.
+
+```js
+const titles = await ScriptInjector.executeInAllFrames(tabId, () => document.title);
+```
+
+ScriptInjector.executeInTabs(tabIds, fn)
+Runs a function across multiple tabs. Returns a Map keyed by tab ID. Entries are either the result value or an object with an error string if that tab failed.
+
+```js
+const results = await ScriptInjector.executeInTabs([1, 2, 3], () => location.href);
+```
+
+ScriptInjector.getPageTitle(tabId)
+Convenience method. Returns the document title of the given tab.
+
+ScriptInjector.getPageText(tabId)
+Convenience method. Returns the body innerText of the given tab.
+
+CSSINJECTOR
+
+Insert and remove CSS in tabs.
 
 All methods are static and async.
 
-| Method | Parameters | Return Type | Description |
-|--------|-----------|-------------|-------------|
-| `register` | `id: string, matches: string[], js?: string[], css?: string[], runAt?: 'document_start' \| 'document_end' \| 'document_idle'` | `Promise<void>` | Register a content script dynamically |
-| `unregister` | `ids: string[]` | `Promise<void>` | Unregister content scripts by ID |
-| `getAll` | none | `Promise<RegisteredContentScript[]>` | Get all registered content scripts |
-| `update` | `id: string, changes: { matches?, js?, css? }` | `Promise<void>` | Update a registered content script |
-| `toggle` | `id: string, matches: string[], js: string[]` | `Promise<boolean>` | Toggle a script on/off; returns `true` if registered, `false` if unregistered |
+CSSInjector.inject(tabId, css)
+Injects a CSS string into a tab.
 
-### `ScriptInjectorError`
+```js
+await CSSInjector.inject(tabId, 'body { background: #1a1a1a; color: #eee; }');
+```
 
-Custom error class thrown by `ScriptInjector` methods.
+CSSInjector.injectFile(tabId, file)
+Injects a CSS file from your extension bundle.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `message` | `string` | Human-readable error message |
-| `code` | `string` | Error code from `ScriptInjectorErrorCode` |
-| `operation` | `string` | The method that threw the error |
-| `originalError` | `Error \| undefined` | The underlying Chrome API error |
+```js
+await CSSInjector.injectFile(tabId, 'styles/custom.css');
+```
 
-### `ScriptInjectorErrorCode`
+CSSInjector.remove(tabId, css)
+Removes previously injected CSS. The string must match what was originally injected.
 
-| Code | Description |
-|------|-------------|
-| `SCRIPTING_API_ERROR` | General Chrome Scripting API error |
-| `INVALID_TAB_ID` | Invalid or nonexistent tab ID |
-| `TABS_API_ERROR` | Error querying the Tabs API |
-| `NO_ACTIVE_TAB` | No active tab found in the current window |
-| `SCRIPT_EXECUTION_FAILED` | Script execution failed (invalid function or file) |
+```js
+await CSSInjector.remove(tabId, 'body { background: #1a1a1a; color: #eee; }');
+```
 
-### `CSSInjectorError`
+CSSInjector.injectAllFrames(tabId, css)
+Injects CSS into every frame of a tab, including iframes.
 
-Custom error class thrown by `CSSInjector` methods.
+CSSInjector.darkMode(tabId)
+Applies a quick invert filter to simulate dark mode on any page. Images and videos are re-inverted so they look normal.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `message` | `string` | Human-readable error message |
-| `code` | `string` | Error code from `CSSInjectorErrorCode` |
-| `operation` | `string` | The method that threw the error |
-| `originalError` | `Error \| undefined` | The underlying Chrome API error |
+```js
+await CSSInjector.darkMode(tabId);
+```
 
-### `CSSInjectorErrorCode`
+CSSInjector.hide(tabId, selector)
+Hides elements matching a CSS selector with display none.
 
-| Code | Description |
-|------|-------------|
-| `SCRIPTING_API_ERROR` | General Chrome Scripting API error |
-| `INVALID_TAB_ID` | Invalid or nonexistent tab ID |
-| `INVALID_CSS` | Invalid CSS string provided |
-| `INVALID_FILE` | Invalid file path provided |
+```js
+await CSSInjector.hide(tabId, '.ads, .banner, .popup');
+```
 
-## License
+CONTENTSCRIPTREGISTRY
 
-MIT
+Dynamically register and manage content scripts at runtime instead of declaring them statically in the manifest.
 
-## See Also
+All methods are static and async.
 
-- [chrome-extension-starter-mv3](https://github.com/theluckystrike/chrome-extension-starter-mv3) - Production-ready MV3 template
-- [chrome-storage-plus](https://github.com/theluckystrike/chrome-storage-plus) - Type-safe storage wrapper
-- [content-script-toolkit](https://github.com/theluckystrike/content-script-toolkit) - Shadow DOM and content script utilities
+ContentScriptRegistry.register(id, matches, js?, css?, runAt?)
+Registers a content script. The runAt parameter defaults to document_idle. Accepts optional js and css file arrays.
 
-## Contributing
+```js
+await ContentScriptRegistry.register(
+  'my-script',
+  ['https://*.example.com/*'],
+  ['content.js'],
+  ['styles.css'],
+  'document_end'
+);
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+ContentScriptRegistry.unregister(ids)
+Unregisters content scripts by their IDs.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```js
+await ContentScriptRegistry.unregister(['my-script']);
+```
+
+ContentScriptRegistry.getAll()
+Returns all currently registered content scripts.
+
+ContentScriptRegistry.update(id, changes)
+Updates a registered script. Pass an object with optional matches, js, and css arrays.
+
+```js
+await ContentScriptRegistry.update('my-script', { matches: ['https://new-site.com/*'] });
+```
+
+ContentScriptRegistry.toggle(id, matches, js)
+Toggles a content script on or off. Returns true if the script was registered, false if it was unregistered.
+
+```js
+const isOn = await ContentScriptRegistry.toggle('my-script', ['*://*/*'], ['inject.js']);
+```
+
+ERROR HANDLING
+
+Both ScriptInjector and CSSInjector throw typed errors with structured information.
+
+ScriptInjectorError has properties: message, code, operation, and originalError.
+
+Error codes for ScriptInjector:
+- SCRIPTING_API_ERROR - general Chrome Scripting API failure
+- INVALID_TAB_ID - tab ID is invalid or the tab no longer exists
+- TABS_API_ERROR - failure querying the Tabs API
+- NO_ACTIVE_TAB - no active tab found in the current window
+- SCRIPT_EXECUTION_FAILED - the function or file could not be executed
+
+CSSInjectorError has the same shape. Its error codes:
+- SCRIPTING_API_ERROR - general Chrome Scripting API failure
+- INVALID_TAB_ID - tab ID is invalid or the tab no longer exists
+- INVALID_CSS - the CSS string was empty or not a string
+- INVALID_FILE - the file path was empty or not a string
+
+```js
+import { ScriptInjector, ScriptInjectorError } from 'chrome-scripting-api';
+
+try {
+  await ScriptInjector.executeFunction(tabId, () => document.title);
+} catch (err) {
+  if (err instanceof ScriptInjectorError) {
+    console.log(err.code);       // e.g. "INVALID_TAB_ID"
+    console.log(err.operation);  // e.g. "executeFunction"
+  }
+}
+```
+
+LICENSE
+
+MIT. See LICENSE file.
 
 ---
 
-Built by [Zovo](https://zovo.one)
+Built at [zovo.one](https://zovo.one)
